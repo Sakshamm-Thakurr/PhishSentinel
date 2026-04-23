@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhishSentinel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+
+  .topbar { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 32px; display: flex; align-items: center; gap: 12px; }
+  .logo { font-size: 20px; font-weight: 700; color: #58a6ff; letter-spacing: -0.5px; }
+  .logo span { color: #f85149; }
+  .tagline { font-size: 12px; color: #8b949e; margin-left: 4px; }
+
+  .container { max-width: 900px; margin: 48px auto; padding: 0 24px; }
+
+  .upload-card { background: #161b22; border: 1px dashed #30363d; border-radius: 12px; padding: 48px; text-align: center; transition: border-color 0.2s; cursor: pointer; }
+  .upload-card:hover { border-color: #58a6ff; }
+  .upload-card h2 { font-size: 18px; margin-bottom: 8px; }
+  .upload-card p { font-size: 13px; color: #8b949e; margin-bottom: 24px; }
+  .upload-btn { background: #21262d; border: 1px solid #30363d; color: #e6edf3; padding: 10px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+  .upload-btn:hover { background: #30363d; }
+  #file-input { display: none; }
+  .file-name { margin-top: 16px; font-size: 13px; color: #58a6ff; }
+
+  .analyze-btn { width: 100%; margin-top: 20px; padding: 14px; background: #1f6feb; border: none; color: white; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+  .analyze-btn:hover { background: #388bfd; }
+  .analyze-btn:disabled { background: #21262d; color: #8b949e; cursor: not-allowed; }
+
+  .loading { text-align: center; padding: 48px; display: none; }
+  .spinner { width: 40px; height: 40px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { display: none; }
+
+  .verdict-banner { border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+  .verdict-CRITICAL { background: linear-gradient(135deg, #3d0f0f, #5a1a1a); border: 1px solid #f85149; }
+  .verdict-HIGH     { background: linear-gradient(135deg, #2d1f00, #3d2a00); border: 1px solid #e3b341; }
+  .verdict-MEDIUM   { background: linear-gradient(135deg, #1f2a00, #2a3a00); border: 1px solid #7ee787; }
+  .verdict-LOW      { background: linear-gradient(135deg, #0d2010, #0d2a18); border: 1px solid #3fb950; }
+
+  .verdict-label { font-size: 13px; color: #8b949e; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .verdict-text { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .verdict-CRITICAL .verdict-text { color: #f85149; }
+  .verdict-HIGH .verdict-text     { color: #e3b341; }
+  .verdict-MEDIUM .verdict-text   { color: #7ee787; }
+  .verdict-LOW .verdict-text      { color: #3fb950; }
+  .verdict-score { text-align: right; }
+  .score-num { font-size: 42px; font-weight: 800; color: #58a6ff; }
+  .score-label { font-size: 12px; color: #8b949e; }
+  .recommendation { margin-top: 12px; font-size: 13px; color: #e6edf3; opacity: 0.85; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .score-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; text-align: center; }
+  .score-card .num { font-size: 32px; font-weight: 700; color: #58a6ff; }
+  .score-card .lbl { font-size: 12px; color: #8b949e; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .section { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #8b949e; margin-bottom: 16px; }
+
+  .email-meta { display: grid; grid-template-columns: 80px 1fr; gap: 6px 12px; font-size: 13px; }
+  .meta-key { color: #8b949e; }
+  .meta-val { color: #e6edf3; word-break: break-all; }
+
+  .flag { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #21262d; }
+  .flag:last-child { border-bottom: none; }
+  .flag-code { font-family: monospace; font-size: 11px; background: #f851491a; color: #f85149; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .flag-pts { font-size: 12px; color: #e3b341; white-space: nowrap; font-weight: 600; }
+  .flag-msg { font-size: 13px; color: #e6edf3; }
+
+  .url-chip { display: inline-block; background: #21262d; border-radius: 4px; padding: 4px 10px; font-size: 12px; font-family: monospace; margin: 4px 4px 4px 0; word-break: break-all; }
+
+  .new-btn { width: 100%; margin-top: 8px; padding: 12px; background: #21262d; border: 1px solid #30363d; color: #e6edf3; font-size: 14px; border-radius: 8px; cursor: pointer; }
+  .new-btn:hover { background: #30363d; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Phish<span>Sentinel</span></div>
+  <div class="tagline">Automated Phishing Detection & Analysis Platform</div>
+</div>
+
+<div class="container">
+
+  <!-- Upload Section -->
+  <div id="upload-section">
+    <div class="upload-card" onclick="document.getElementById('file-input').click()">
+      <div style="font-size:48px;margin-bottom:16px;">📧</div>
+      <h2>Drop a suspicious email here</h2>
+      <p>Upload a .eml file to analyze headers, URLs, and body content for phishing indicators</p>
+      <button class="upload-btn">Choose .eml file</button>
+      <input type="file" id="file-input" accept=".eml" onchange="fileSelected(this)">
+      <div class="file-name" id="file-name"></div>
+    </div>
+    <button class="analyze-btn" id="analyze-btn" disabled onclick="runAnalysis()">
+      Analyze Email
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="color:#8b949e;font-size:14px;">Analyzing email — checking headers, URLs, and body content...</p>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results"></div>
+
+</div>
+
+<script>
+let selectedFile = null;
+
+function fileSelected(input) {
+  selectedFile = input.files[0];
+  document.getElementById("file-name").textContent = selectedFile ? "Selected: " + selectedFile.name : "";
+  document.getElementById("analyze-btn").disabled = !selectedFile;
+}
+
+async function runAnalysis() {
+  if (!selectedFile) return;
+
+  document.getElementById("upload-section").style.display = "none";
+  document.getElementById("loading").style.display = "block";
+
+  const formData = new FormData();
+  formData.append("email_file", selectedFile);
+
+  try {
+    const res  = await fetch("/analyze", { method: "POST", body: formData });
+    const data = await res.json();
+    showResults(data);
+  } catch (e) {
+    alert("Analysis failed: " + e.message);
+    reset();
+  }
+}
+
+function showResults(data) {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("results").style.display = "block";
+
+  const r  = data.report;
+  const em = data.email;
+  const vc = r.verdict;
+
+  const flagsHtml = r.flags.map(f => `
+    <div class="flag">
+      <span class="flag-code">${f.code}</span>
+      <span class="flag-pts">+${f.score}pts</span>
+      <span class="flag-msg">${f.message}</span>
+    </div>`).join("");
+
+  const urlsHtml = em.urls.length
+    ? em.urls.map(u => `<span class="url-chip">${u}</span>`).join("")
+    : '<span style="color:#8b949e;font-size:13px;">No URLs found</span>';
+
+  document.getElementById("results").innerHTML = `
+    <div class="verdict-banner verdict-${vc}">
+      <div>
+        <div class="verdict-label">Final Verdict</div>
+        <div class="verdict-text">${vc}</div>
+        <div class="recommendation">⚠️ ${r.recommendation}</div>
+      </div>
+      <div class="verdict-score">
+        <div class="score-num">${r.total_score}</div>
+        <div class="score-label">Risk Score</div>
+        <div style="font-size:12px;color:#8b949e;margin-top:4px;">Confidence: ${r.confidence}</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="score-card"><div class="num">${r.score_breakdown.header}</div><div class="lbl">Header Score</div></div>
+      <div class="score-card"><div class="num">${r.score_breakdown.url}</div><div class="lbl">URL Score</div></div>
+      <div class="score-card"><div class="num">${r.score_breakdown.nlp}</div><div class="lbl">NLP Score</div></div>
+    </div>
+
+    <div class="section">
+      <h3>Email Metadata</h3>
+      <div class="email-meta">
+        <span class="meta-key">From</span><span class="meta-val">${em.from}</span>
+        <span class="meta-key">To</span><span class="meta-val">${em.to}</span>
+        <span class="meta-key">Subject</span><span class="meta-val">${em.subject}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>🚩 Flags Detected (${r.total_flags})</h3>
+      ${flagsHtml || '<p style="color:#8b949e;font-size:13px;">No flags detected.</p>'}
+    </div>
+
+    <div class="section">
+      <h3>URLs Found (${em.urls.length})</h3>
+      ${urlsHtml}
+    </div>
+
+    <button class="new-btn" onclick="reset()">← Analyze another email</button>
+  `;
+}
+
+function reset() {
+  selectedFile = null;
+  document.getElementById("file-input").value = "";
+  document.getElementById("file-name").textContent = "";
+  document.getElementById("analyze-btn").disabled = true;
+  document.getElementById("upload-section").style.display = "block";
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("results").innerHTML = "";
+}
+</script>
+</body>
+</html>

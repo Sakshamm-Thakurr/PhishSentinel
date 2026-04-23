@@ -1,0 +1,20 @@
+From: paypal-security@paypa1.com
+To: victim@gmail.com
+Subject: Urgent: Your account has been suspended
+Date: Wed, 22 Apr 2026 10:00:00 +0000
+Message-ID: <abc123@paypa1.com>
+Reply-To: attacker@evil.com
+Return-Path: <bounce@paypa1.com>
+Received-SPF: fail (domain of paypa1.com does not designate sender as permitted)
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html>
+<body>
+<p>Dear Customer,</p>
+<p>Your PayPal account has been <strong>suspended</strong> due to suspicious activity.</p>
+<p>Click below immediately to verify your identity or your account will be permanently closed:</p>
+<a href="http://paypal-verify-account.evil-login.com/secure">Verify Now</a>
+<p>You have 24 hours to act or lose access forever.</p>
+</body>
+</html>

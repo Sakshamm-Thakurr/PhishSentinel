@@ -1,0 +1,63 @@
+{
+  "email": {
+    "from": "paypal-security@paypa1.com",
+    "subject": "Urgent: Your account has been suspended",
+    "urls": [
+      "http://paypal-verify-account.evil-login.com/secure"
+    ]
+  },
+  "report": {
+    "verdict": "CRITICAL",
+    "confidence": "Very High",
+    "total_score": 150,
+    "score_breakdown": {
+      "header": 135,
+      "url": 0,
+      "nlp": 15
+    },
+    "total_flags": 8,
+    "flags": [
+      {
+        "code": "SPF_FAIL",
+        "message": "SPF check failed \u2014 sender IP not authorised to send for this domain.",
+        "score": 30
+      },
+      {
+        "code": "DKIM_MISSING",
+        "message": "No DKIM signature found \u2014 email integrity cannot be verified.",
+        "score": 20
+      },
+      {
+        "code": "DMARC_MISSING",
+        "message": "No DMARC authentication results found.",
+        "score": 10
+      },
+      {
+        "code": "REPLY_TO_MISMATCH",
+        "message": "Reply-To domain (evil.com) differs from From domain (paypa1.com) \u2014 classic BEC/phishing indicator.",
+        "score": 35
+      },
+      {
+        "code": "BRAND_SPOOFING",
+        "message": "Email claims to be from 'paypal' but sending domain is 'paypa1.com' not 'paypal.com'.",
+        "score": 40
+      },
+      {
+        "code": "NLP_URGENCY",
+        "message": "3 urgency phrase(s) detected: immediately, suspicious activity, verify now",
+        "score": 9
+      },
+      {
+        "code": "NLP_CREDENTIAL",
+        "message": "1 credential phrase(s) detected: verify your identity",
+        "score": 4
+      },
+      {
+        "code": "NLP_IMPERSONATION",
+        "message": "1 impersonation phrase(s) detected: dear customer",
+        "score": 2
+      }
+    ],
+    "recommendation": "DO NOT interact with this email. Block sender domain, report to security team, and delete immediately."
+  }
+}
